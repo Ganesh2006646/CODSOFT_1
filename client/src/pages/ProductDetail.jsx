@@ -1,0 +1,125 @@
+import { useState, useEffect, useContext } from 'react';
+import { useParams } from 'react-router-dom';
+import axios from 'axios';
+import { CartContext } from '../context/CartContext';
+import ProductCard from '../components/ProductCard';
+import { toast } from 'react-hot-toast';
+import { ShoppingCart, Minus, Plus, Package } from 'lucide-react';
+
+const ProductDetail = () => {
+  const { id } = useParams();
+  const { addToCart } = useContext(CartContext);
+  const [product, setProduct] = useState(null);
+  const [related, setRelated] = useState([]);
+  const [quantity, setQuantity] = useState(1);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch the product and related products
+  useEffect(() => {
+    const fetchProduct = async () => {
+      setLoading(true);
+      try {
+        const { data } = await axios.get(`/api/products/${id}`);
+        setProduct(data);
+
+        // Fetch related products from the same category
+        const allProducts = await axios.get(`/api/products?category=${data.category}`);
+        // Remove current product from related list
+        const filtered = allProducts.data.filter((p) => p._id !== id);
+        setRelated(filtered.slice(0, 3));
+      } catch (error) {
+        console.error('Error loading product:', error);
+      }
+      setLoading(false);
+    };
+    fetchProduct();
+  }, [id]);
+
+  const handleAddToCart = () => {
+    // Add the product 'quantity' number of times
+    for (let i = 0; i < quantity; i++) {
+      addToCart(product);
+    }
+    toast.success(`Added ${quantity} x ${product.name} to cart`);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-20">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
+  if (!product) {
+    return <div className="text-center py-20 text-gray-500">Product not found.</div>;
+  }
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 py-10">
+      {/* Product Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-16">
+        {/* Image */}
+        <div className="bg-gray-50 rounded-2xl overflow-hidden">
+          <img src={product.image} alt={product.name} className="w-full h-[400px] object-cover" />
+        </div>
+
+        {/* Details */}
+        <div className="flex flex-col justify-center">
+          <span className="text-sm font-medium text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full w-fit mb-3">
+            {product.category}
+          </span>
+          <h1 className="text-3xl font-extrabold text-gray-900 mb-3">{product.name}</h1>
+          <p className="text-gray-500 mb-6 leading-relaxed">{product.description}</p>
+          <p className="text-4xl font-extrabold text-gray-900 mb-6">${product.price.toFixed(2)}</p>
+
+          {/* Stock Info */}
+          <div className="flex items-center gap-2 mb-6">
+            <Package className="h-5 w-5 text-green-500" />
+            <span className="text-sm text-green-600 font-medium">
+              {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
+            </span>
+          </div>
+
+          {/* Quantity Selector */}
+          <div className="flex items-center gap-4 mb-6">
+            <span className="text-sm font-medium text-gray-600">Quantity:</span>
+            <div className="flex items-center gap-2 border rounded-lg px-3 py-1">
+              <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="p-1 hover:text-indigo-600">
+                <Minus className="h-4 w-4" />
+              </button>
+              <span className="font-bold w-8 text-center">{quantity}</span>
+              <button onClick={() => setQuantity(quantity + 1)} className="p-1 hover:text-indigo-600">
+                <Plus className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Add to Cart */}
+          <button
+            onClick={handleAddToCart}
+            disabled={product.stock === 0}
+            className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all flex items-center gap-2 w-fit disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+          >
+            <ShoppingCart className="h-5 w-5" />
+            Add to Cart
+          </button>
+        </div>
+      </div>
+
+      {/* Related Products */}
+      {related.length > 0 && (
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Related Products</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {related.map((item) => (
+              <ProductCard key={item._id} product={item} />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default ProductDetail;
