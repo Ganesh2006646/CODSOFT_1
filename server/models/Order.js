@@ -40,8 +40,25 @@ const orderSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['processing', 'shipped', 'delivered'],
-        default: 'processing',
+        enum: ['Placed', 'Confirmed', 'Packed', 'Shipped', 'Out for Delivery', 'Delivered'],
+        default: 'Placed',
+    },
+    statusHistory: [
+        {
+            status: {
+                type: String,
+            },
+            timestamp: {
+                type: Date,
+                default: Date.now,
+            },
+            note: {
+                type: String,
+            }
+        }
+    ],
+    couponCode: {
+        type: String,
     }
 }, { timestamps: true });
 

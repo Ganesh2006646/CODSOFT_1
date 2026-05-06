@@ -71,6 +71,7 @@ router.post('/', protect, adminOnly, async (req, res) => {
             category,
             image,
             stock: stock || 10,
+            priceHistory: [{ price, changedAt: Date.now() }],
         });
 
         res.status(201).json(product);
@@ -91,6 +92,57 @@ router.delete('/:id', protect, adminOnly, async (req, res) => {
         res.json({ message: 'Product deleted successfully' });
     } catch (error) {
         res.status(500).json({ message: 'Error deleting product', error: error.message });
+    }
+});
+
+// UPDATE PRODUCT (Admin only)
+// PATCH /api/products/:id
+router.patch('/:id', protect, adminOnly, async (req, res) => {
+    try {
+        const updates = req.body;
+        const product = await Product.findById(req.params.id);
+        if (!product) {
+            return res.status(404).json({ message: 'Product not found' });
+        }
+
+        if (updates.price !== undefined && Number(updates.price) !== product.price) {
+            product.priceHistory.push({ price: Number(updates.price), changedAt: Date.now() });
+            product.price = Number(updates.price);
+        }
+
+        if (updates.name !== undefined) product.name = updates.name;
+        if (updates.description !== undefined) product.description = updates.description;
+        if (updates.category !== undefined) product.category = updates.category;
+        if (updates.image !== undefined) product.image = updates.image;
+        if (updates.stock !== undefined) product.stock = Number(updates.stock);
+
+        const updated = await product.save();
+        res.json(updated);
+    } catch (error) {
+        res.status(500).json({ message: 'Error updating product', error: error.message });
+    }
+});
+
+// SET FLASH SALE (Admin only)
+// PATCH /api/products/:id/flashsale
+router.patch('/:id/flashsale', protect, adminOnly, async (req, res) => {
+    try {
+        const { isActive, discountPercent, endsAt } = req.body;
+        const product = await Product.findById(req.params.id);
+        if (!product) {
+            return res.status(404).json({ message: 'Product not found' });
+        }
+
+        product.flashSale = {
+            isActive: Boolean(isActive),
+            discountPercent: Number(discountPercent || 0),
+            endsAt: endsAt ? new Date(endsAt) : null,
+        };
+
+        const updated = await product.save();
+        res.json(updated);
+    } catch (error) {
+        res.status(500).json({ message: 'Error updating flash sale', error: error.message });
     }
 });
 

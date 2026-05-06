@@ -3,6 +3,9 @@ import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { CartContext } from '../context/CartContext';
 import ProductCard from '../components/ProductCard';
+import FlashSaleTimer from '../components/FlashSaleTimer';
+import PriceHistoryChart from '../components/PriceHistoryChart';
+import RecentlyViewed from '../components/RecentlyViewed';
 import { toast } from 'react-hot-toast';
 import { ShoppingCart, Minus, Plus, Package } from 'lucide-react';
 
@@ -13,6 +16,8 @@ const ProductDetail = () => {
   const [related, setRelated] = useState([]);
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [recentKey, setRecentKey] = useState(0);
+  const [daysFilter, setDaysFilter] = useState(30);
 
   // Fetch the product and related products
   useEffect(() => {
@@ -21,6 +26,12 @@ const ProductDetail = () => {
       try {
         const { data } = await axios.get(`/api/products/${id}`);
         setProduct(data);
+
+        const saved = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
+        const filteredRecent = saved.filter((item) => item._id !== data._id);
+        const updatedRecent = [data, ...filteredRecent].slice(0, 3);
+        localStorage.setItem('recentlyViewed', JSON.stringify(updatedRecent));
+        setRecentKey(Date.now());
 
         // Fetch related products from the same category
         const allProducts = await axios.get(`/api/products?category=${data.category}`);
@@ -55,6 +66,18 @@ const ProductDetail = () => {
     return <div className="text-center py-20 text-gray-500">Product not found.</div>;
   }
 
+  const flashSaleActive = product.flashSale && product.flashSale.isActive && product.flashSale.endsAt
+    ? new Date(product.flashSale.endsAt) > new Date()
+    : false;
+  const discount = flashSaleActive ? (product.price * product.flashSale.discountPercent) / 100 : 0;
+  const finalPrice = product.price - discount;
+  const filteredHistory = (product.priceHistory || [])
+    .filter((item) => new Date(item.changedAt).getTime() >= Date.now() - daysFilter * 86400000)
+    .map((item) => ({
+      date: new Date(item.changedAt).toLocaleDateString(),
+      price: item.price,
+    }));
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-10">
       {/* Product Section */}
@@ -69,9 +92,22 @@ const ProductDetail = () => {
           <span className="text-sm font-medium text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full w-fit mb-3">
             {product.category}
           </span>
+          {flashSaleActive && (
+            <div className="bg-red-50 text-red-600 text-xs font-bold px-3 py-1 rounded-full w-fit mb-2">
+              Flash Sale {product.flashSale.discountPercent}% off
+            </div>
+          )}
           <h1 className="text-3xl font-extrabold text-gray-900 mb-3">{product.name}</h1>
           <p className="text-gray-500 mb-6 leading-relaxed">{product.description}</p>
-          <p className="text-4xl font-extrabold text-gray-900 mb-6">${product.price.toFixed(2)}</p>
+          {flashSaleActive ? (
+            <div className="mb-6">
+              <p className="text-sm text-gray-400 line-through">${product.price.toFixed(2)}</p>
+              <p className="text-4xl font-extrabold text-red-600">${finalPrice.toFixed(2)}</p>
+              <FlashSaleTimer endsAt={product.flashSale.endsAt} />
+            </div>
+          ) : (
+            <p className="text-4xl font-extrabold text-gray-900 mb-6">${product.price.toFixed(2)}</p>
+          )}
 
           {/* Stock Info */}
           <div className="flex items-center gap-2 mb-6">
@@ -118,6 +154,27 @@ const ProductDetail = () => {
           </div>
         </div>
       )}
+
+      {/* Price History */}
+      <div className="mt-16 bg-white rounded-2xl border border-gray-100 p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <h2 className="text-xl font-bold text-gray-900">Price History</h2>
+          <div className="flex gap-2">
+            {[30, 60, 90].map((days) => (
+              <button
+                key={days}
+                onClick={() => setDaysFilter(days)}
+                className={`text-xs px-3 py-1 rounded-full ${daysFilter === days ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600'}`}
+              >
+                {days} days
+              </button>
+            ))}
+          </div>
+        </div>
+        <PriceHistoryChart data={filteredHistory} />
+      </div>
+
+      <RecentlyViewed refreshKey={recentKey} />
     </div>
   );
 };

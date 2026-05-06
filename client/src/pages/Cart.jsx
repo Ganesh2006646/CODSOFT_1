@@ -2,11 +2,18 @@ import { useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { CartContext } from '../context/CartContext';
 import CartItem from '../components/CartItem';
+import CountdownTimer from '../components/CountdownTimer';
 import { ShoppingBag, ArrowRight } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 const Cart = () => {
-  const { cart, getTotal } = useContext(CartContext);
+  const { cart, getTotal, removeFromCart } = useContext(CartContext);
   const total = getTotal();
+
+  const handleExpire = (item) => {
+    toast.error('Reservation expired, item removed');
+    removeFromCart(item._id);
+  };
 
   // Empty cart view
   if (cart.length === 0) {
@@ -36,7 +43,14 @@ const Cart = () => {
         {/* Cart Items */}
         <div className="lg:col-span-2 space-y-4">
           {cart.map((item) => (
-            <CartItem key={item._id} item={item} />
+            <div key={item._id} className="space-y-2">
+              <CartItem item={item} />
+              {item.expiresAt && (
+                <div className="bg-white border border-gray-100 rounded-xl p-3">
+                  <CountdownTimer expiresAt={item.expiresAt} onExpire={() => handleExpire(item)} />
+                </div>
+              )}
+            </div>
           ))}
         </div>
 

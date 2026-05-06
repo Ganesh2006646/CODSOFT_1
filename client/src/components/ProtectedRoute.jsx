@@ -3,7 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 
 // Wraps pages that need login. Redirects to login if not authenticated.
-const ProtectedRoute = ({ children, adminOnly }) => {
+const ProtectedRoute = ({ children, adminOnly, userOnly }) => {
   const { user, loading } = useContext(AuthContext);
 
   if (loading) {
@@ -21,6 +21,11 @@ const ProtectedRoute = ({ children, adminOnly }) => {
   // If route is admin-only, check user role
   if (adminOnly && user.role !== 'admin') {
     return <Navigate to="/" replace />;
+  }
+
+  // If route is user-only, block admins
+  if (userOnly && user.role === 'admin') {
+    return <Navigate to="/admin" replace />;
   }
 
   return children;

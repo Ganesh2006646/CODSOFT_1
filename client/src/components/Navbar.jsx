@@ -45,6 +45,9 @@ const Navbar = () => {
                     <Shield className="h-4 w-4" /> Admin
                   </Link>
                 )}
+                <Link to="/my-orders" className="text-gray-600 hover:text-indigo-600 text-sm">
+                  My Orders
+                </Link>
                 <span className="text-sm text-gray-500">Hi, {user.name}</span>
                 <button onClick={logout} className="flex items-center gap-1 text-gray-500 hover:text-red-500 text-sm">
                   <LogOut className="h-4 w-4" /> Logout
@@ -87,6 +90,7 @@ const Navbar = () => {
               {user.role === 'admin' && (
                 <Link to="/admin" onClick={() => setMenuOpen(false)} className="block py-2 text-indigo-600 font-medium">Admin Dashboard</Link>
               )}
+              <Link to="/my-orders" onClick={() => setMenuOpen(false)} className="block py-2 text-gray-700 font-medium">My Orders</Link>
               <button onClick={() => { logout(); setMenuOpen(false); }} className="block py-2 text-red-500 font-medium">Logout</button>
             </>
           ) : (

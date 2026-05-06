@@ -18,12 +18,17 @@ const authRoutes = require('./routes/auth');
 const productRoutes = require('./routes/products');
 const orderRoutes = require('./routes/orders');
 const paymentRoutes = require('./routes/payment');
+const cartRoutes = require('./routes/cart');
+const couponRoutes = require('./routes/coupons');
+const { startReservationCleanup } = require('./jobs/expireReservations');
 
 // Use Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/payment', paymentRoutes);
+app.use('/api/cart', cartRoutes);
+app.use('/api/coupons', couponRoutes);
 
 // Test Route
 app.get('/', (req, res) => {
@@ -36,6 +41,7 @@ const PORT = process.env.PORT || 5000;
 mongoose.connect(process.env.MONGO_URI)
     .then(() => {
         console.log('Connected to MongoDB');
+        startReservationCleanup();
         app.listen(PORT, () => {
             console.log(`Server is running on http://localhost:${PORT}`);
         });

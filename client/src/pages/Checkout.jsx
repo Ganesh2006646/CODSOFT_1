@@ -5,12 +5,16 @@ import { CartContext } from '../context/CartContext';
 import { AuthContext } from '../context/AuthContext';
 import { toast } from 'react-hot-toast';
 import { CreditCard, MapPin } from 'lucide-react';
+import CouponInput from '../components/CouponInput';
 
 const Checkout = () => {
   const { cart, getTotal, clearCart } = useContext(CartContext);
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
   const [placing, setPlacing] = useState(false);
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [appliedCoupon, setAppliedCoupon] = useState('');
+  const [applyingCoupon, setApplyingCoupon] = useState(false);
 
   // Shipping address form fields
   const [address, setAddress] = useState({
@@ -21,6 +25,7 @@ const Checkout = () => {
   });
 
   const total = getTotal();
+  const finalTotal = Math.max(0, total - discountAmount);
 
   const handleChange = (e) => {
     setAddress({ ...address, [e.target.name]: e.target.value });
@@ -42,7 +47,7 @@ const Checkout = () => {
       };
 
       // Step 1: Process mock payment
-      await axios.post('/api/payment/create-intent', { amount: total }, config);
+      await axios.post('/api/payment/create-intent', { amount: finalTotal }, config);
 
       // Step 2: Create the order
       const orderData = {
@@ -52,7 +57,8 @@ const Checkout = () => {
           price: item.price,
         })),
         shippingAddress: address,
-        totalAmount: total,
+        totalAmount: finalTotal,
+        couponCode: appliedCoupon || undefined,
       };
 
       const { data } = await axios.post('/api/orders', orderData, config);
@@ -65,6 +71,24 @@ const Checkout = () => {
       toast.error(error.response?.data?.message || 'Failed to place order');
     }
     setPlacing(false);
+  };
+
+  const handleApplyCoupon = async (code) => {
+    setApplyingCoupon(true);
+    try {
+      const config = {
+        headers: { Authorization: `Bearer ${user.token}` },
+      };
+      const { data } = await axios.post('/api/coupons/validate', { code, cartTotal: total }, config);
+      setDiscountAmount(data.discountAmount || 0);
+      setAppliedCoupon(data.code || code.toUpperCase());
+      toast.success(`Coupon applied! You saved $${Number(data.discountAmount).toFixed(2)}`);
+    } catch (error) {
+      setDiscountAmount(0);
+      setAppliedCoupon('');
+      toast.error(error.response?.data?.message || 'Invalid coupon');
+    }
+    setApplyingCoupon(false);
   };
 
   // Redirect if cart is empty
@@ -148,6 +172,13 @@ const Checkout = () => {
                 <CreditCard className="h-5 w-5 text-indigo-600" /> Order Summary
               </h2>
 
+              <div className="mb-4">
+                <CouponInput onApply={handleApplyCoupon} appliedCoupon={appliedCoupon} />
+                {applyingCoupon && (
+                  <p className="text-xs text-gray-400 mt-2">Checking coupon...</p>
+                )}
+              </div>
+
               <div className="space-y-3 mb-4">
                 {cart.map((item) => (
                   <div key={item._id} className="flex justify-between text-sm">
@@ -162,9 +193,15 @@ const Checkout = () => {
                   <span>Shipping</span>
                   <span className="text-green-600 font-medium">Free</span>
                 </div>
+                {discountAmount > 0 && (
+                  <div className="flex justify-between text-green-600 mb-1">
+                    <span>Discount</span>
+                    <span>- ${discountAmount.toFixed(2)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between items-center pt-2 border-t">
                   <span className="font-bold text-gray-900">Total</span>
-                  <span className="text-2xl font-extrabold text-indigo-600">${total.toFixed(2)}</span>
+                  <span className="text-2xl font-extrabold text-indigo-600">${finalTotal.toFixed(2)}</span>
                 </div>
               </div>
 

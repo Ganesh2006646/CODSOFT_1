@@ -1,11 +1,14 @@
 import { useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { CartContext } from '../context/CartContext';
+import { CompareContext } from '../context/CompareContext';
 import { toast } from 'react-hot-toast';
 import { ShoppingCart } from 'lucide-react';
 
 const ProductCard = ({ product }) => {
   const { addToCart } = useContext(CartContext);
+  const { compareList, addToCompare, removeFromCompare } = useContext(CompareContext);
+  const isChecked = compareList.some((p) => p._id === product._id);
 
   const handleAdd = () => {
     addToCart(product);
@@ -33,7 +36,18 @@ const ProductCard = ({ product }) => {
         </Link>
         <p className="text-gray-400 text-sm mt-1 line-clamp-2">{product.description}</p>
 
-        <div className="mt-auto flex items-center justify-between pt-3 border-t border-gray-50 mt-3">
+        <div className="mt-auto pt-3 border-t border-gray-50 mt-3">
+          <label className="flex items-center gap-2 text-xs text-gray-500 mb-2">
+            <input
+              type="checkbox"
+              checked={isChecked}
+              onChange={() => (isChecked ? removeFromCompare(product._id) : addToCompare(product))}
+              className="accent-indigo-600"
+            />
+            Compare
+          </label>
+
+          <div className="flex items-center justify-between">
           <span className="text-xl font-extrabold text-gray-900">${product.price.toFixed(2)}</span>
           <button
             onClick={handleAdd}
@@ -42,6 +56,7 @@ const ProductCard = ({ product }) => {
             <ShoppingCart className="h-4 w-4" />
             Add
           </button>
+          </div>
         </div>
       </div>
     </div>
