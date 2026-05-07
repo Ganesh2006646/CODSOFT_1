@@ -10,6 +10,13 @@
 
 ---
 
+## 🚀 Live Demo
+
+- **Frontend Application:** [https://codsoft-client.onrender.com](https://codsoft-client.onrender.com)
+- **Backend API:** [https://codsoft-api-t330.onrender.com](https://codsoft-api-t330.onrender.com)
+
+---
+
 ##  About The Project
 
 ShopEase is a modern online shopping website built using the **MERN stack** (MongoDB, Express.js, React.js, Node.js). Developed as part of the CodSoft Web Development Internship.
