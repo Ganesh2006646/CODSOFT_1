@@ -1,11 +1,23 @@
 {
   "name": "shopease-ecommerce",
   "version": "1.0.0",
-  "description": "Backend server",
+  "description": "Backend server for ShopEase E-Commerce platform",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "nodemon server.js",
+    "test": "jest --testTimeout=30000 --forceExit --detectOpenHandles"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/tests/**/*.test.js"
+    ],
+    "coverageDirectory": "coverage",
+    "collectCoverageFrom": [
+      "routes/**/*.js",
+      "middleware/**/*.js"
+    ]
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
@@ -15,10 +27,16 @@
     "express-rate-limit": "^7.5.0",
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.3",
-    "mongoose": "^8.0.0"
+    "mongoose": "^8.0.0",
+    "validator": "^13.15.35"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "mongodb-memory-server": "^10.1.4",
+    "supertest": "^7.1.0"
   },
   "keywords": [],
-  "author": "",
+  "author": "Ganesh - CodSoft Intern",
   "license": "MIT",
   "type": "commonjs"
 }
