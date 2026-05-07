@@ -1,0 +1,499 @@
+{
+  "info": {
+    "_postman_id": "shopease-api-collection-v1",
+    "name": "ShopEase API",
+    "description": "Complete API collection for the ShopEase E-Commerce platform.\n\n## Setup\n1. Set `BASE_URL` to `http://localhost:5000`\n2. After login, copy the `token` from the response and set `JWT_TOKEN`\n\n## Demo Credentials\n- **Admin**: admin@shopease.com / admin123\n- **User**: john@test.com / john123",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "BASE_URL", "value": "http://localhost:5000", "type": "string" },
+    { "key": "JWT_TOKEN", "value": "", "type": "string" },
+    { "key": "PRODUCT_ID", "value": "", "type": "string" },
+    { "key": "ORDER_ID", "value": "", "type": "string" },
+    { "key": "COUPON_ID", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "🔐 Auth",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Doe\",\n  \"email\": \"jane@example.com\",\n  \"password\": \"pass1234\"\n}"
+            },
+            "url": { "raw": "{{BASE_URL}}/api/auth/register", "host": ["{{BASE_URL}}"], "path": ["api", "auth", "register"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test('Response has token', () => pm.expect(body).to.have.property('token'));",
+                  "if (body.token) pm.collectionVariables.set('JWT_TOKEN', body.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login Admin",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@shopease.com\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": { "raw": "{{BASE_URL}}/api/auth/login", "host": ["{{BASE_URL}}"], "path": ["api", "auth", "login"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Has JWT token', () => pm.expect(body).to.have.property('token'));",
+                  "pm.test('Role is admin', () => pm.expect(body.role).to.equal('admin'));",
+                  "if (body.token) pm.collectionVariables.set('JWT_TOKEN', body.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login User",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@test.com\",\n  \"password\": \"john123\"\n}"
+            },
+            "url": { "raw": "{{BASE_URL}}/api/auth/login", "host": ["{{BASE_URL}}"], "path": ["api", "auth", "login"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "if (body.token) pm.collectionVariables.set('JWT_TOKEN', body.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login - Invalid Credentials",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"wrong@example.com\",\n  \"password\": \"wrongpass\"\n}"
+            },
+            "url": { "raw": "{{BASE_URL}}/api/auth/login", "host": ["{{BASE_URL}}"], "path": ["api", "auth", "login"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test('Status is 401', () => pm.response.to.have.status(401));"]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "🛍️ Products",
+      "item": [
+        {
+          "name": "Get All Products",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{BASE_URL}}/api/products", "host": ["{{BASE_URL}}"], "path": ["api", "products"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Returns array', () => pm.expect(body).to.be.an('array'));",
+                  "if (body.length > 0) pm.collectionVariables.set('PRODUCT_ID', body[0]._id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Products - Search by Name",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{BASE_URL}}/api/products?search=headphone",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "products"],
+              "query": [{ "key": "search", "value": "headphone" }]
+            }
+          }
+        },
+        {
+          "name": "Get Products - Filter by Category",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{BASE_URL}}/api/products?category=Electronics",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "products"],
+              "query": [{ "key": "category", "value": "Electronics" }]
+            }
+          }
+        },
+        {
+          "name": "Get Products - Sort Low to High",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{BASE_URL}}/api/products?sort=low",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "products"],
+              "query": [{ "key": "sort", "value": "low" }]
+            }
+          }
+        },
+        {
+          "name": "Get Single Product",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{BASE_URL}}/api/products/{{PRODUCT_ID}}", "host": ["{{BASE_URL}}"], "path": ["api", "products", "{{PRODUCT_ID}}"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test('Status is 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Add Product (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{JWT_TOKEN}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"New Test Product\",\n  \"description\": \"A high-quality test item.\",\n  \"price\": 49.99,\n  \"category\": \"Electronics\",\n  \"image\": \"https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500\",\n  \"stock\": 25\n}"
+            },
+            "url": { "raw": "{{BASE_URL}}/api/products", "host": ["{{BASE_URL}}"], "path": ["api", "products"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "if (body._id) pm.collectionVariables.set('PRODUCT_ID', body._id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Product (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{JWT_TOKEN}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 44.99,\n  \"stock\": 30\n}"
+            },
+            "url": { "raw": "{{BASE_URL}}/api/products/{{PRODUCT_ID}}", "host": ["{{BASE_URL}}"], "path": ["api", "products", "{{PRODUCT_ID}}"] }
+          }
+        },
+        {
+          "name": "Set Flash Sale (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{JWT_TOKEN}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isActive\": true,\n  \"discountPercent\": 20,\n  \"endsAt\": \"2026-12-31T23:59:59.000Z\"\n}"
+            },
+            "url": { "raw": "{{BASE_URL}}/api/products/{{PRODUCT_ID}}/flashsale", "host": ["{{BASE_URL}}"], "path": ["api", "products", "{{PRODUCT_ID}}", "flashsale"] }
+          }
+        },
+        {
+          "name": "Delete Product (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{JWT_TOKEN}}" }],
+            "url": { "raw": "{{BASE_URL}}/api/products/{{PRODUCT_ID}}", "host": ["{{BASE_URL}}"], "path": ["api", "products", "{{PRODUCT_ID}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📦 Orders",
+      "item": [
+        {
+          "name": "Place Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{JWT_TOKEN}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    { \"product\": \"{{PRODUCT_ID}}\", \"quantity\": 2 }\n  ],\n  \"shippingAddress\": {\n    \"street\": \"123 Park Lane\",\n    \"city\": \"Mumbai\",\n    \"state\": \"Maharashtra\",\n    \"pincode\": \"400001\"\n  },\n  \"couponCode\": \"\"\n}"
+            },
+            "url": { "raw": "{{BASE_URL}}/api/orders", "host": ["{{BASE_URL}}"], "path": ["api", "orders"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test('Status is Placed', () => pm.expect(body.status).to.equal('Placed'));",
+                  "if (body._id) pm.collectionVariables.set('ORDER_ID', body._id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get My Orders",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{JWT_TOKEN}}" }],
+            "url": { "raw": "{{BASE_URL}}/api/orders/my", "host": ["{{BASE_URL}}"], "path": ["api", "orders", "my"] }
+          }
+        },
+        {
+          "name": "Get All Orders (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{JWT_TOKEN}}" }],
+            "url": { "raw": "{{BASE_URL}}/api/orders", "host": ["{{BASE_URL}}"], "path": ["api", "orders"] }
+          }
+        },
+        {
+          "name": "Update Order Status (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{JWT_TOKEN}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Confirmed\",\n  \"note\": \"Order verified and confirmed\"\n}"
+            },
+            "url": { "raw": "{{BASE_URL}}/api/orders/{{ORDER_ID}}/status", "host": ["{{BASE_URL}}"], "path": ["api", "orders", "{{ORDER_ID}}", "status"] }
+          }
+        },
+        {
+          "name": "Delete Order (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{JWT_TOKEN}}" }],
+            "url": { "raw": "{{BASE_URL}}/api/orders/{{ORDER_ID}}", "host": ["{{BASE_URL}}"], "path": ["api", "orders", "{{ORDER_ID}}"] }
+          }
+        },
+        {
+          "name": "Clear All Orders (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{JWT_TOKEN}}" }],
+            "url": { "raw": "{{BASE_URL}}/api/orders/clear", "host": ["{{BASE_URL}}"], "path": ["api", "orders", "clear"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🎟️ Coupons",
+      "item": [
+        {
+          "name": "Validate Coupon",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{JWT_TOKEN}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"SAVE10\",\n  \"cartTotal\": 150\n}"
+            },
+            "url": { "raw": "{{BASE_URL}}/api/coupons/validate", "host": ["{{BASE_URL}}"], "path": ["api", "coupons", "validate"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200 or 404', () => {",
+                  "  pm.expect([200, 404]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Coupon (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{JWT_TOKEN}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"SAVE10\",\n  \"type\": \"percent\",\n  \"value\": 10,\n  \"minOrder\": 50,\n  \"maxUses\": 100,\n  \"expiresAt\": \"2026-12-31T23:59:59.000Z\",\n  \"isActive\": true\n}"
+            },
+            "url": { "raw": "{{BASE_URL}}/api/coupons", "host": ["{{BASE_URL}}"], "path": ["api", "coupons"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "if (body._id) pm.collectionVariables.set('COUPON_ID', body._id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get All Coupons (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{JWT_TOKEN}}" }],
+            "url": { "raw": "{{BASE_URL}}/api/coupons", "host": ["{{BASE_URL}}"], "path": ["api", "coupons"] }
+          }
+        },
+        {
+          "name": "Delete Coupon (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{JWT_TOKEN}}" }],
+            "url": { "raw": "{{BASE_URL}}/api/coupons/{{COUPON_ID}}", "host": ["{{BASE_URL}}"], "path": ["api", "coupons", "{{COUPON_ID}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🛒 Cart",
+      "item": [
+        {
+          "name": "Get Active Reservations",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{JWT_TOKEN}}" }],
+            "url": { "raw": "{{BASE_URL}}/api/cart", "host": ["{{BASE_URL}}"], "path": ["api", "cart"] }
+          }
+        },
+        {
+          "name": "Reserve Product (Add to Cart)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{JWT_TOKEN}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"{{PRODUCT_ID}}\",\n  \"quantity\": 1\n}"
+            },
+            "url": { "raw": "{{BASE_URL}}/api/cart/add", "host": ["{{BASE_URL}}"], "path": ["api", "cart", "add"] }
+          }
+        },
+        {
+          "name": "Remove Reservation",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{JWT_TOKEN}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"{{PRODUCT_ID}}\"\n}"
+            },
+            "url": { "raw": "{{BASE_URL}}/api/cart/remove", "host": ["{{BASE_URL}}"], "path": ["api", "cart", "remove"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "💳 Payment",
+      "item": [
+        {
+          "name": "Create Payment Intent (Mock)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{JWT_TOKEN}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 149.99,\n  \"currency\": \"usd\"\n}"
+            },
+            "url": { "raw": "{{BASE_URL}}/api/payment/create-intent", "host": ["{{BASE_URL}}"], "path": ["api", "payment", "create-intent"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "⚙️ Health Check",
+      "item": [
+        {
+          "name": "API Health Check",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{BASE_URL}}/", "host": ["{{BASE_URL}}"], "path": [""] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('API is running', () => pm.expect(pm.response.text()).to.include('ShopEase'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

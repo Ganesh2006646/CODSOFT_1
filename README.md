@@ -1,7 +1,12 @@
-# 🛒 ShopEase — E-Commerce Website
+# 🛒 ShopEase — E-Commerce Platform
 
 > **CodSoft Internship — Level 3, Task 1**
-> A full-stack E-Commerce platform with product browsing, shopping cart, checkout, and admin dashboard.
+> A full-stack, internship-ready E-Commerce platform with product browsing, shopping cart, checkout, admin dashboard, automated tests, and Postman API docs.
+
+[![Jest Tests](https://img.shields.io/badge/tests-Jest-green?logo=jest)](./server/tests)
+[![Postman](https://img.shields.io/badge/API-Postman-orange?logo=postman)](./postman)
+[![Express 4](https://img.shields.io/badge/express-v4.22-blue)](https://expressjs.com)
+[![MongoDB](https://img.shields.io/badge/database-MongoDB-green?logo=mongodb)](https://mongodb.com)
 
 ---
 
@@ -188,9 +193,17 @@ npm run dev
 
 ---
 
-##  Assets & Screenshots
+## 📸 Screenshots
 
-Add screenshots in `/assets/screenshots` for: homepage, cart, checkout, admin dashboard.
+| Page | Preview |
+|------|--------|
+| **Homepage** | ![Homepage](assets/screenshots/home.png) |
+| **Products** | ![Products](assets/screenshots/products.png) |
+| **Cart** | ![Cart](assets/screenshots/cart.png) |
+| **Checkout** | ![Checkout](assets/screenshots/checkout.png) |
+| **Admin Dashboard** | ![Admin Dashboard](assets/screenshots/admin-dashboard.png) |
+
+> Screenshots are located in `/assets/screenshots/`. Run `npm run dev` and capture pages to populate them.
 
 ---
 
@@ -301,6 +314,39 @@ Add screenshots in `/assets/screenshots` for: homepage, cart, checkout, admin da
 | `npm run client` | Frontend only (Vite) |
 | `npm start` | Production backend |
 | `node server/seed.js` | Seed the database |
+| `npm test` (in `server/`) | Run all Jest API tests |
+
+---
+
+## 🧪 Testing
+
+API tests are written with **Jest** + **Supertest** using an in-memory MongoDB server.
+
+```bash
+cd server
+npm test
+```
+
+Test suites:
+- `tests/auth.test.js` — Register, Login, validation
+- `tests/products.test.js` — CRUD with role enforcement
+- `tests/orders.test.js` — Order placement, user/admin access
+- `tests/coupons.test.js` — Coupon validate, create, list
+
+---
+
+## 📮 Postman Collection
+
+Import the collection into Postman:
+```
+postman/ShopEase.postman_collection.json
+```
+
+Set collection variables:
+| Variable | Value |
+|----------|-------|
+| `BASE_URL` | `http://localhost:5000` |
+| `JWT_TOKEN` | *(auto-set after Login Admin request)* |
 
 ---
 
