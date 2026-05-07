@@ -201,6 +201,7 @@ npm run dev
 | **Products** | ![Products](assets/screenshots/products.png) |
 | **Cart** | ![Cart](assets/screenshots/cart.png) |
 | **Checkout** | ![Checkout](assets/screenshots/checkout.png) |
+| **My Orders** | ![Orders](assets/screenshots/orders.png) |
 | **Admin Dashboard** | ![Admin Dashboard](assets/screenshots/admin-dashboard.png) |
 
 > Screenshots are located in `/assets/screenshots/`. Run `npm run dev` and capture pages to populate them.
