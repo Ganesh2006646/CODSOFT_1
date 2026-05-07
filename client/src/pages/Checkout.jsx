@@ -1,4 +1,4 @@
-import { useState, useContext } from 'react';
+import { useState, useContext, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { CartContext } from '../context/CartContext';
@@ -54,10 +54,8 @@ const Checkout = () => {
         items: cart.map((item) => ({
           product: item._id,
           quantity: item.quantity,
-          price: item.price,
         })),
         shippingAddress: address,
-        totalAmount: finalTotal,
         couponCode: appliedCoupon || undefined,
       };
 
@@ -73,23 +71,46 @@ const Checkout = () => {
     setPlacing(false);
   };
 
-  const handleApplyCoupon = async (code) => {
-    setApplyingCoupon(true);
+  const applyCoupon = useCallback(async (code, options = {}) => {
+    const { silent = false } = options;
+    const normalizedCode = code ? code.trim() : '';
+    if (!normalizedCode || !user) return;
+
+    if (!silent) {
+      setApplyingCoupon(true);
+    }
+
     try {
       const config = {
         headers: { Authorization: `Bearer ${user.token}` },
       };
-      const { data } = await axios.post('/api/coupons/validate', { code, cartTotal: total }, config);
+      const { data } = await axios.post('/api/coupons/validate', { code: normalizedCode, cartTotal: total }, config);
       setDiscountAmount(data.discountAmount || 0);
-      setAppliedCoupon(data.code || code.toUpperCase());
-      toast.success(`Coupon applied! You saved $${Number(data.discountAmount).toFixed(2)}`);
+      setAppliedCoupon(data.code || normalizedCode.toUpperCase());
+      if (!silent) {
+        toast.success(`Coupon applied! You saved $${Number(data.discountAmount).toFixed(2)}`);
+      }
     } catch (error) {
       setDiscountAmount(0);
       setAppliedCoupon('');
-      toast.error(error.response?.data?.message || 'Invalid coupon');
+      if (!silent) {
+        toast.error(error.response?.data?.message || 'Invalid coupon');
+      }
+    } finally {
+      if (!silent) {
+        setApplyingCoupon(false);
+      }
     }
-    setApplyingCoupon(false);
+  }, [total, user]);
+
+  const handleApplyCoupon = (code) => {
+    applyCoupon(code);
   };
+
+  useEffect(() => {
+    if (!appliedCoupon) return;
+    applyCoupon(appliedCoupon, { silent: true });
+  }, [cart, appliedCoupon, applyCoupon]);
 
   // Redirect if cart is empty
   if (cart.length === 0) {

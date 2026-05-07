@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Order = require('../models/Order');
 const Coupon = require('../models/Coupon');
+const Product = require('../models/Product');
 const { protect } = require('../middleware/authMiddleware');
 const { adminOnly } = require('../middleware/adminMiddleware');
 
@@ -11,7 +12,7 @@ const STATUS_FLOW = ['Placed', 'Confirmed', 'Packed', 'Shipped', 'Out for Delive
 // POST /api/orders
 router.post('/', protect, async (req, res) => {
     try {
-        const { items, shippingAddress, totalAmount, couponCode } = req.body;
+        const { items, shippingAddress, couponCode } = req.body;
 
         if (req.user && req.user.role === 'admin') {
             return res.status(403).json({ message: 'Admins cannot place orders' });
@@ -21,20 +22,83 @@ router.post('/', protect, async (req, res) => {
             return res.status(400).json({ message: 'No items in order' });
         }
 
+        let calculatedTotal = 0;
+        const processedItems = [];
+
+        for (const item of items) {
+            const quantity = Number(item.quantity || 0);
+            if (!item.product || quantity < 1) {
+                return res.status(400).json({ message: 'Invalid product or quantity' });
+            }
+
+            const product = await Product.findById(item.product);
+            if (!product) {
+                return res.status(404).json({ message: 'Product not found' });
+            }
+
+            calculatedTotal += product.price * quantity;
+            processedItems.push({
+                product: product._id,
+                quantity,
+                price: product.price,
+            });
+        }
+
+        let couponToUpdate = null;
+        let appliedCouponCode = undefined;
+        const normalizedCoupon = couponCode ? couponCode.trim().toUpperCase() : '';
+
+        if (normalizedCoupon) {
+            const coupon = await Coupon.findOne({ code: normalizedCoupon });
+            if (!coupon) {
+                return res.status(404).json({ message: 'Coupon not found' });
+            }
+
+            if (!coupon.isActive) {
+                return res.status(400).json({ message: 'Coupon is inactive' });
+            }
+
+            if (coupon.expiresAt < new Date()) {
+                return res.status(400).json({ message: 'Coupon is expired' });
+            }
+
+            if (coupon.maxUses > 0 && coupon.usedCount >= coupon.maxUses) {
+                return res.status(400).json({ message: 'Coupon usage limit reached' });
+            }
+
+            if (calculatedTotal < coupon.minOrder) {
+                return res.status(400).json({ message: 'Cart total is below minimum order value' });
+            }
+
+            let discountAmount = 0;
+            if (coupon.type === 'percent') {
+                discountAmount = (calculatedTotal * coupon.value) / 100;
+            } else {
+                discountAmount = coupon.value;
+            }
+
+            discountAmount = Math.min(discountAmount, calculatedTotal);
+            discountAmount = Number(discountAmount.toFixed(2));
+            calculatedTotal = Number((calculatedTotal - discountAmount).toFixed(2));
+
+            couponToUpdate = coupon;
+            appliedCouponCode = coupon.code;
+        }
+
         const order = await Order.create({
             user: req.user._id,
-            items,
+            items: processedItems,
             shippingAddress,
-            totalAmount,
+            totalAmount: calculatedTotal,
             paymentStatus: 'paid', // Mock payment — marking as paid
             status: 'Placed',
             statusHistory: [{ status: 'Placed', timestamp: Date.now() }],
-            couponCode: couponCode || undefined,
+            couponCode: appliedCouponCode,
         });
 
-        if (couponCode) {
+        if (couponToUpdate) {
             await Coupon.updateOne(
-                { code: couponCode.toUpperCase() },
+                { _id: couponToUpdate._id },
                 { $inc: { usedCount: 1 } }
             );
         }

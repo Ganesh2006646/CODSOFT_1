@@ -24,14 +24,35 @@ export const CartProvider = ({ children }) => {
     }
   };
 
+  const mergeGuestCart = async (guestItems) => {
+    if (!user || !Array.isArray(guestItems) || guestItems.length === 0) return;
+    const config = getAuthConfig();
+    await Promise.allSettled(
+      guestItems.map((item) =>
+        axios.post('/api/cart/add', { productId: item._id, quantity: item.quantity }, config)
+      )
+    );
+  };
+
   // Load cart from API (if logged in) or localStorage
   useEffect(() => {
-    if (user) {
-      fetchCart();
-    } else {
+    const syncCart = async () => {
+      if (user) {
+        const saved = localStorage.getItem('cartItems');
+        const guestItems = saved ? JSON.parse(saved) : [];
+        if (guestItems.length > 0) {
+          await mergeGuestCart(guestItems);
+          localStorage.removeItem('cartItems');
+        }
+        await fetchCart();
+        return;
+      }
+
       const saved = localStorage.getItem('cartItems');
       setCart(saved ? JSON.parse(saved) : []);
-    }
+    };
+
+    syncCart();
   }, [user]);
 
   // Save cart to localStorage for guest users
