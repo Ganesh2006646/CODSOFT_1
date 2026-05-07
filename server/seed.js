@@ -304,23 +304,27 @@ const seedDatabase = async () => {
         await CartReservation.deleteMany();
         console.log('Cleared old data');
 
-        // Create admin user
+        // Create admin user — credentials loaded from .env
+        const adminEmail = process.env.ADMIN_EMAIL || 'admin@shopease.com';
+        const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
         await User.create({
             name: 'Admin',
-            email: 'admin@shopease.com',
-            password: 'admin123',
+            email: adminEmail,
+            password: adminPassword,
             role: 'admin',
         });
-        console.log('Created admin  → email: admin@shopease.com  password: admin123');
+        console.log(`Created admin  → email: ${adminEmail}`);
 
-        // Create a test customer user
+        // Create a test customer user — credentials loaded from .env
+        const testEmail = process.env.TEST_USER_EMAIL || 'john@test.com';
+        const testPassword = process.env.TEST_USER_PASSWORD || 'john123';
         await User.create({
             name: 'John Doe',
-            email: 'john@test.com',
-            password: 'john123',
+            email: testEmail,
+            password: testPassword,
             role: 'user',
         });
-        console.log('Created user   → email: john@test.com       password: john123');
+        console.log(`Created user   → email: ${testEmail}`);
 
         // Insert products
         await Product.insertMany(products);
