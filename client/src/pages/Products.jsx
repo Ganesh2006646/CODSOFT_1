@@ -29,7 +29,7 @@ const Products = () => {
       setLoading(true);
       try {
         const { data } = await axios.get(
-          `/api/products?search=${searchTerm}&category=${category}&sort=${sortOrder}`
+          `/api/products?search=${encodeURIComponent(searchTerm)}&category=${encodeURIComponent(category)}&sort=${encodeURIComponent(sortOrder)}`
         );
         setProducts(data);
       } catch (error) {

@@ -34,7 +34,7 @@ const ProductDetail = () => {
         setRecentKey(Date.now());
 
         // Fetch related products from the same category
-        const allProducts = await axios.get(`/api/products?category=${data.category}`);
+        const allProducts = await axios.get(`/api/products?category=${encodeURIComponent(data.category)}`);
         // Remove current product from related list
         const filtered = allProducts.data.filter((p) => p._id !== id);
         setRelated(filtered.slice(0, 3));

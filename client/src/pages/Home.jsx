@@ -52,7 +52,7 @@ const Home = () => {
           {categories.map((cat) => (
             <Link
               key={cat}
-              to={`/products?category=${cat}`}
+              to={`/products?category=${encodeURIComponent(cat)}`}
               className="bg-white border border-gray-100 rounded-xl p-6 text-center font-semibold text-gray-700 hover:border-indigo-300 hover:text-indigo-600 hover:shadow-md transition-all"
             >
               {cat}
