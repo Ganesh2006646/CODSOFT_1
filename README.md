@@ -178,6 +178,29 @@ npm run dev
 
 ---
 
+##  Project Metadata & Recommendations
+
+- Server uses `express` v4 (see `server/package.json`) — update README or upgrade to Express 5 if you prefer.
+- `mongoose` pinned to `^8.x` in package.json for broader compatibility; if you prefer a newer version, test thoroughly.
+- Package name changed from `server` to `shopease-ecommerce` for a more professional presentation.
+- Demo admin credentials are included for convenience in development; move them to `.env.example` and remove from seed logs for production safety.
+- Consider adding automated tests (Jest) and a Postman collection to showcase API reliability.
+
+---
+
+##  Assets & Screenshots
+
+Add screenshots in `/assets/screenshots` for: homepage, cart, checkout, admin dashboard.
+
+---
+
+##  How To Contribute
+
+- Fork the repo, create a feature branch, open a pull request.
+- Run `npm install` at root, then `npm run dev` to start both services locally.
+
+---
+
 ##  Database Schemas
 
 ### User

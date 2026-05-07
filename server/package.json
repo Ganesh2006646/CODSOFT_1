@@ -1,5 +1,5 @@
 {
-  "name": "server",
+  "name": "shopease-ecommerce",
   "version": "1.0.0",
   "description": "Backend server",
   "main": "server.js",
@@ -12,11 +12,13 @@
     "cors": "^2.8.6",
     "dotenv": "^16.6.1",
     "express": "^4.22.1",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.3",
-    "mongoose": "^9.6.1"
+    "mongoose": "^8.0.0"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "type": "commonjs"
 }
