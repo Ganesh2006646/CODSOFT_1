@@ -164,6 +164,20 @@ npm run dev
 
 ---
 
+##  Security Notes
+
+- Order totals are calculated on the server from Product prices; client-supplied totals are ignored.
+- Coupon validation (expiry, usage limits, min order, type) happens on the server before discounts are applied.
+
+---
+
+##  Deployment Notes
+
+- Local uploads under `/uploads` are ephemeral on hosts like Render/Vercel; use Cloudinary or S3 for production.
+- Hosting providers inject environment variables at runtime; ensure the app can start without a local `.env` file.
+
+---
+
 ##  Database Schemas
 
 ### User
